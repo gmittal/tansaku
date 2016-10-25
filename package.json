@@ -1,0 +1,23 @@
+{
+  "name": "tansaku-search",
+  "version": "1.0.0",
+  "description": "A search engine of sorts.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gmittal/tansaku.git"
+  },
+  "keywords": [
+    "tansaku",
+    "search"
+  ],
+  "author": "Gautam Mittal",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gmittal/tansaku/issues"
+  },
+  "homepage": "https://github.com/gmittal/tansaku#readme"
+}
