@@ -19,5 +19,8 @@
   "bugs": {
     "url": "https://github.com/gmittal/tansaku/issues"
   },
-  "homepage": "https://github.com/gmittal/tansaku#readme"
+  "homepage": "https://github.com/gmittal/tansaku#readme",
+  "dependencies": {
+    "request": "^2.76.0"
+  }
 }
