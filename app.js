@@ -4,9 +4,9 @@
    * 2016 Gautam Mittal
 */
 
-const nj = require('./numjs.min'); // Scientific computing
+const nj = require('./numjs.min');
 
-function vector_magnitude(v) {
+function vectorMagnitude(v) {
   v = nj.multiply(v, v);
   var magnitude = 0;
   for (var i = 0; i < v.shape[0]; i++)
@@ -14,14 +14,14 @@ function vector_magnitude(v) {
   return Math.sqrt(magnitude);
 }
 
-function cosine_similarity(v, u) {
-  return nj.dot(v, u).get(0) / (vector_magnitude(v) * vector_magnitude(u));
+function cosineSimilarity(v, u) {
+  return nj.dot(v, u).get(0) / (vectorMagnitude(v) * vectorMagnitude(u));
 }
 
 function search(query, docs) {
   for (var i = 0; i < docs.length; i++) {
-    console.log(cosine_similarity(query, docs[i]));
+    console.log(cosineSimilarity(query, docs[i]));
   }
 }
 
-search(nj.array([0, 1, 2, 3, 4, 5]), [nj.array([0, 1, 2, 3, 4, 0]), nj.array([0, 1, 2, 3, 4, 5])]);
+search(nj.array([0, 1, 2, 2, 9, 5, 12]), [nj.array([0, -5, 2, 3, 4, 0, -12]), nj.array([0, 1, 2, 3, 4, 5, 16])]);
