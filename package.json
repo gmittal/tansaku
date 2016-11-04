@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/gmittal/tansaku#readme",
   "dependencies": {
-    "request": "^2.76.0"
+    "cheerio": "^0.22.0",
+    "node-readability": "^2.2.0"
   }
 }

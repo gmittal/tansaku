@@ -15,7 +15,7 @@ function vectorMagnitude(v) {
 }
 
 function cosineSimilarity(v, u) {
-  return nj.dot(v, u).get(0) / (vectorMagnitude(v) * vectorMagnitude(u));
+  return nj.dot(nj.sigmoid(v), nj.sigmoid(u)).get(0) / (vectorMagnitude(v) * vectorMagnitude(u));
 }
 
 function search(query, docs) {
