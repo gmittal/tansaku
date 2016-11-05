@@ -5,9 +5,16 @@
 */
 
 const cheerio = require('cheerio');
+const fs = require('fs');
 const read = require('node-readability');
+const uuid = require('node-uuid');
+
 const seed = "http://gautam.cc/magical-mathematics-part-i";
+const MAX_LINKS = 100;
+var count = 0;
 var links = [seed];
+var prev = [];
+var vectorIndex = [];
 
 Array.prototype.unique = function() {
     return this.reduce(function(accum, current) {
@@ -51,9 +58,10 @@ function crawl() {
         }
       }
 
+      count++;
       const $ = cheerio.load(article.html);
 
-      console.log("["+(links.length).toString() +"] " + url);
+      console.log("["+(links.length).toString() +"] [v: "+ (vectorIndex.length).toString() +"] " + url);
 
       // All words
       var chunked = (article.title + ' ' + article.textBody)
@@ -67,13 +75,38 @@ function crawl() {
       // All unique words
       var vocab = chunked.unique();
 
+      for (var j = 0; j < vocab.length; j++) {
+        if (vectorIndex.indexOf(vocab[j])) {
+          vectorIndex.push(vocab[j]);
+        }
+      }
+
+      // Save what has been found so far
+      fs.readFile(__dirname+'/index.json', 'utf-8', function (e, data) {
+        if (e) throw e;
+        const d = {
+          'title': article.title,
+          'url': url,
+          'data': chunked
+        };
+
+        var t = JSON.parse(data);
+        t[uuid.v1()] = d;
+        fs.writeFile(__dirname+"/index.json", JSON.stringify(t, null, 2));
+      });
+
+
       // Finds all URLs the current page links to
       for (var i = 0; i < $("a")["length"]; i++) {
           const urls = rel_to_abs(url, $("a")[i.toString()].attribs.href);
-          links.push(urls);
+          if (prev.indexOf(urls) == -1) {
+              links.push(urls);
+              prev.push(urls);
+          }
       }
 
       links.shift();
+      links = links.unique();
       if (links.length != 0) {
         crawl();
       }
