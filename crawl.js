@@ -7,6 +7,7 @@
 const cheerio = require('cheerio');
 const read = require('node-readability');
 const seed = "http://gautam.cc/magical-mathematics-part-i";
+var links = [seed];
 
 Array.prototype.unique = function() {
     return this.reduce(function(accum, current) {
@@ -17,7 +18,7 @@ Array.prototype.unique = function() {
     }, []);
 }
 
-/* Handles wacky URLs */
+/* Handles wacky relative URLs */
 function rel_to_abs(base, url){
   if(/^(https?|file|ftps?|mailto|javascript|data:image\/[^;]{2,9};):/i.test(url))
          return url;
@@ -39,32 +40,46 @@ function rel_to_abs(base, url){
     return url;
 }
 
-function crawl(url) {
-  read(url, function(err, article, meta) {
-    if (typeof article == "undefined") return;
+function crawl() {
+    const url = links[0];
+    read(url, function(err, article, meta) {
+      if (typeof article == "undefined") {
+        links.shift();
+        if (links.length != 0) {
+          crawl();
+          return;
+        }
+      }
 
-    const $ = cheerio.load(article.html);
-    var chunked = (article.title + ' ' + article.textBody)
-    .toLowerCase()
-    .replace(/\W/g, ' ')
-    .split(" ")
-    .filter(function(element) {
-      return element !== "";
+      const $ = cheerio.load(article.html);
+
+      console.log("["+(links.length).toString() +"] " + url);
+
+      // All words
+      var chunked = (article.title + ' ' + article.textBody)
+      .toLowerCase()
+      .replace(/\W/g, ' ')
+      .split(" ")
+      .filter(function(element) {
+        return element !== "";
+      });
+
+      // All unique words
+      var vocab = chunked.unique();
+
+      // Finds all URLs the current page links to
+      for (var i = 0; i < $("a")["length"]; i++) {
+          const urls = rel_to_abs(url, $("a")[i.toString()].attribs.href);
+          links.push(urls);
+      }
+
+      links.shift();
+      if (links.length != 0) {
+        crawl();
+      }
+
+      article.close();
     });
-
-    var vocab = chunked.unique();
-
-    // console.log(chunked.length);
-    // console.log(vocab.length);
-
-    // Finds all URLs the current page links to
-    for (var i = 0; i < $("a")["length"]; i++) {
-        const urls = rel_to_abs(url, $("a")[i.toString()].attribs.href);
-        crawl(urls);
-    }
-
-    article.close();
-  });
 }
 
-crawl(seed);
+crawl();
