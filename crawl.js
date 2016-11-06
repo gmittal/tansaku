@@ -1,11 +1,11 @@
 /*
     * Tansaku Crawl
-    * A very simple webcrawler that traverses the web
+    * A very simple webcrawler that traverses the web given a seed URL
     * 2016 Gautam Mittal
 */
 
 const cheerio = require('cheerio');
-const fs = require('fs');
+const fs = require('graceful-fs');
 const read = require('node-readability');
 const uuid = require('node-uuid');
 
@@ -15,6 +15,7 @@ var count = 0;
 var links = [seed];
 var prev = [];
 var vectorIndex = [];
+var storage = {};
 
 Array.prototype.unique = function() {
     return this.reduce(function(accum, current) {
@@ -81,20 +82,14 @@ function crawl() {
         }
       }
 
-      // Save what has been found so far
-      fs.readFile(__dirname+'/index.json', 'utf-8', function (e, data) {
-        if (e) throw e;
-        const d = {
-          'title': article.title,
-          'url': url,
-          'data': chunked
-        };
+      storage.vectorIndex = vectorIndex;
+      storage[uuid.v1()] = {
+        'title': article.title,
+        'url': url,
+        'data': chunked
+      };
 
-        var t = JSON.parse(data);
-        t[uuid.v1()] = d;
-        fs.writeFile(__dirname+"/index.json", JSON.stringify(t, null, 2));
-      });
-
+      fs.writeFile(__dirname+"/index.json", JSON.stringify(storage));
 
       // Finds all URLs the current page links to
       for (var i = 0; i < $("a")["length"]; i++) {
@@ -114,5 +109,51 @@ function crawl() {
       article.close();
     });
 }
+
+function index(arr) {
+    var a = [], b = [], prev;
+    arr.sort();
+    for ( var i = 0; i < arr.length; i++ ) {
+        if ( arr[i] !== prev ) {
+            a.push(arr[i]);
+            b.push(1);
+        } else {
+            b[b.length-1]++;
+        }
+        prev = arr[i];
+    }
+    return [a, b];
+}
+
+process.on('SIGINT', function() {
+    console.log("Reformatting.");
+
+    var d = storage;
+
+    Object.keys(d).forEach(function (id) {
+      if (id !== "vectorIndex") {
+        var indexJSON = {};
+        for (var i = 0; i < index(d[id].data)[0].length; i++) {
+          indexJSON[index(d[id].data)[0][i]] = index(d[id].data)[1][i];
+        }
+
+        var vector = [];
+        for (var j = 0; j < d.vectorIndex.length; j++) {
+          typeof indexJSON[d.vectorIndex[j]] != "undefined" ? vector.push(indexJSON[d.vectorIndex[j]]) :
+          vector.push(0);
+        }
+
+        d[id].data = vector;
+      }
+
+    });
+
+    fs.writeFile(__dirname+'/index.json', JSON.stringify(d), function (e) {
+      console.log("Done.");
+      process.exit();
+    });
+});
+
+
 
 crawl();
