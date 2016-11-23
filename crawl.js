@@ -82,14 +82,14 @@ function crawl() {
         }
       }
 
-      storage.vectorIndex = vectorIndex;
+      storage.vectorIndex = vectorIndex.slice();
       storage[uuid.v1()] = {
         'title': article.title,
         'url': url,
         'data': chunked
       };
 
-      fs.writeFile(__dirname+"/index.json", JSON.stringify(storage));
+      // fs.writeFile(__dirname+"/index.json", JSON.stringify(storage));
 
       // Finds all URLs the current page links to
       for (var i = 0; i < $("a")["length"]; i++) {
@@ -103,10 +103,11 @@ function crawl() {
       links.shift();
       links = links.unique();
       if (links.length != 0) {
+        article.close();
         crawl();
       }
 
-      article.close();
+
     });
 }
 
@@ -130,23 +131,23 @@ process.on('SIGINT', function() {
 
     var d = storage;
 
-    Object.keys(d).forEach(function (id) {
-      if (id !== "vectorIndex") {
-        var indexJSON = {};
-        for (var i = 0; i < index(d[id].data)[0].length; i++) {
-          indexJSON[index(d[id].data)[0][i]] = index(d[id].data)[1][i];
-        }
-
-        var vector = [];
-        for (var j = 0; j < d.vectorIndex.length; j++) {
-          typeof indexJSON[d.vectorIndex[j]] != "undefined" ? vector.push(indexJSON[d.vectorIndex[j]]) :
-          vector.push(0);
-        }
-
-        d[id].data = vector;
-      }
-
-    });
+    // Object.keys(d).forEach(function (id) {
+    //   if (id !== "vectorIndex") {
+    //     var indexJSON = {};
+    //     for (var i = 0; i < index(d[id].data)[0].length; i++) {
+    //       indexJSON[index(d[id].data)[0][i]] = index(d[id].data)[1][i];
+    //     }
+    //
+    //     var vector = [];
+    //     for (var j = 0; j < d.vectorIndex.length; j++) {
+    //       typeof indexJSON[d.vectorIndex[j]] != "undefined" ? vector.push(indexJSON[d.vectorIndex[j]]) :
+    //       vector.push(0);
+    //     }
+    //
+    //     d[id].data = vector;
+    //   }
+    //
+    // });
 
     fs.writeFile(__dirname+'/index.json', JSON.stringify(d), function (e) {
       console.log("Done.");
