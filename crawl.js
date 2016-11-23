@@ -12,10 +12,21 @@ const uuid = require('node-uuid');
 const seed = "http://gautam.cc/magical-mathematics-part-i";
 const MAX_LINKS = 100;
 var count = 0;
-var links = [seed];
-var prev = [];
+var links = [];
+var seen = [];
 var vectorIndex = [];
 var storage = {};
+
+// Update storage if crawling has happened in the past.
+try {
+  fs.accessSync(__dirname+'/index.json');
+  storage = JSON.parse(fs.readFileSync(__dirname+'/index.json', 'utf-8'));
+  links = storage.links.slice();
+  vectorIndex = storage.vectorIndex.slice();
+} catch (e) {
+  fs.writeFileSync(__dirname+'/index.json', '{}', 'utf-8');
+  links = [seed];
+}
 
 Array.prototype.unique = function() {
     return this.reduce(function(accum, current) {
@@ -94,9 +105,9 @@ function crawl() {
       // Finds all URLs the current page links to
       for (var i = 0; i < $("a")["length"]; i++) {
           const urls = rel_to_abs(url, $("a")[i.toString()].attribs.href);
-          if (prev.indexOf(urls) == -1) {
+          if (seen.indexOf(urls) == -1) {
               links.push(urls);
-              prev.push(urls);
+              seen.push(urls);
           }
       }
 
@@ -127,9 +138,10 @@ function index(arr) {
 }
 
 process.on('SIGINT', function() {
-    console.log("Reformatting.");
+    console.log("Saving.");
 
     var d = storage;
+    d.links = links.slice();
 
     // Object.keys(d).forEach(function (id) {
     //   if (id !== "vectorIndex") {
@@ -149,7 +161,7 @@ process.on('SIGINT', function() {
     //
     // });
 
-    fs.writeFile(__dirname+'/index.json', JSON.stringify(d), function (e) {
+    fs.writeFile(__dirname+'/index.json', JSON.stringify(storage), function (e) {
       console.log("Done.");
       process.exit();
     });
