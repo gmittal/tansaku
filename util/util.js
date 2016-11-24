@@ -3,24 +3,25 @@
    * 2016 Gautam Mittal
 */
 
+function index(array) {
+  var a = [], b = [], prev;
+  array.sort();
+  for (var i = 0; i < array.length; i++) {
+      if (array[i] !== prev) {
+          a.push(array[i]);
+          b.push(1);
+      } else {
+          b[b.length-1]++;
+      }
+      prev = array[i];
+  }
+  return [a, b];
+}
+
 module.exports = {
-  index: function (array) {
-    var a = [], b = [], prev;
-    array.sort();
-    for (var i = 0; i < array.length; i++) {
-        if (array[i] !== prev) {
-            a.push(array[i]);
-            b.push(1);
-        } else {
-            b[b.length-1]++;
-        }
-        prev = array[i];
-    }
-    return [a, b];
-  },
   vectorize: function(q, vectorIndex) {
     var indexJSON = {};
-    for (var i = 0; i < util.index(d[id].data)[0].length; i++) {
+    for (var i = 0; i < index(q)[0].length; i++) {
       indexJSON[index(q)[0][i]] = index(q)[1][i];
     }
 
