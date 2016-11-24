@@ -4,7 +4,8 @@
    * 2016 Gautam Mittal
 */
 
-const nj = require('./numjs.min');
+const nj = require(__dirname+'/util/numjs.min');
+const util = require(__dirname+'/util/util');
 
 function vectorMagnitude(v) {
   v = nj.multiply(v, v);

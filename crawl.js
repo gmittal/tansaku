@@ -7,6 +7,7 @@
 const cheerio = require('cheerio');
 const fs = require('graceful-fs');
 const read = require('node-readability');
+const sw = require('stopword');
 const uuid = require('node-uuid');
 
 const seed = "http://gautam.cc/magical-mathematics-part-i";
@@ -84,8 +85,8 @@ function crawl() {
         return element !== "";
       });
 
-      // All unique words
-      var vocab = chunked.unique();
+      // All unique words without stopwords
+      var vocab = sw.removeStopwords(chunked.unique());
 
       for (var j = 0; j < vocab.length; j++) {
         if (vectorIndex.indexOf(vocab[j])) {
@@ -97,7 +98,7 @@ function crawl() {
       storage[uuid.v1()] = {
         'title': article.title,
         'url': url,
-        'data': chunked
+        'data': sw.removeStopwords(chunked)
       };
 
       // fs.writeFile(__dirname+"/index.json", JSON.stringify(storage));
@@ -122,51 +123,17 @@ function crawl() {
     });
 }
 
-function index(arr) {
-    var a = [], b = [], prev;
-    arr.sort();
-    for ( var i = 0; i < arr.length; i++ ) {
-        if ( arr[i] !== prev ) {
-            a.push(arr[i]);
-            b.push(1);
-        } else {
-            b[b.length-1]++;
-        }
-        prev = arr[i];
-    }
-    return [a, b];
-}
-
 process.on('SIGINT', function() {
     console.log("Saving.");
 
     var d = storage;
     d.links = links.slice();
 
-    // Object.keys(d).forEach(function (id) {
-    //   if (id !== "vectorIndex") {
-    //     var indexJSON = {};
-    //     for (var i = 0; i < index(d[id].data)[0].length; i++) {
-    //       indexJSON[index(d[id].data)[0][i]] = index(d[id].data)[1][i];
-    //     }
-    //
-    //     var vector = [];
-    //     for (var j = 0; j < d.vectorIndex.length; j++) {
-    //       typeof indexJSON[d.vectorIndex[j]] != "undefined" ? vector.push(indexJSON[d.vectorIndex[j]]) :
-    //       vector.push(0);
-    //     }
-    //
-    //     d[id].data = vector;
-    //   }
-    //
-    // });
-
     fs.writeFile(__dirname+'/index.json', JSON.stringify(storage), function (e) {
       console.log("Done.");
       process.exit();
     });
 });
-
 
 
 crawl();

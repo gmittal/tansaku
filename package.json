@@ -23,7 +23,9 @@
   "dependencies": {
     "cheerio": "^0.22.0",
     "graceful-fs": "^4.1.10",
+    "lemmer": "^0.1.6",
     "node-readability": "^2.2.0",
-    "node-uuid": "^1.4.7"
+    "node-uuid": "^1.4.7",
+    "stopword": "^0.1.1"
   }
 }
