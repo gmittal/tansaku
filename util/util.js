@@ -19,7 +19,7 @@ function index(array) {
 }
 
 module.exports = {
-  vectorize: function(q, vectorIndex) {
+  vectorize: function (q, vectorIndex) {
     var indexJSON = {};
     for (var i = 0; i < index(q)[0].length; i++) {
       indexJSON[index(q)[0][i]] = index(q)[1][i];
@@ -34,7 +34,7 @@ module.exports = {
 
     return vector;
   },
-  rel_to_abs: function(base, url) {
+  rel_to_abs: function (base, url) {
     if(/^(https?|file|ftps?|mailto|javascript|data:image\/[^;]{2,9};):/i.test(url))
            return url;
       var base_url = base.match(/^(.+)\/?(?:#.+)?$/)[0]+"/";
@@ -53,5 +53,25 @@ module.exports = {
       url = url.replace(/\.$/,"").replace(/\/\./g,"").replace(/"/g,"%22")
               .replace(/'/g,"%27").replace(/</g,"%3C").replace(/>/g,"%3E");
       return url;
+  },
+  sortFromArray: function (A, B) {
+    var all = [];
+    for (var i = 0; i < B.length; i++) {
+        all.push({ 'A': A[i], 'B': B[i] });
+    }
+
+    all.sort(function(a, b) {
+      return  b.A - a.A;
+    });
+
+    A = [];
+    B = [];
+
+    for (var i = 0; i < all.length; i++) {
+       A.push(all[i].A);
+       B.push(all[i].B);
+    }
+
+    return [A, B];
   }
 }

@@ -39,16 +39,25 @@ function search(query) {
 
   query = sw.removeStopwords(query);
   lemmer.lemmatize(query, function (err, words) {
+    if (err) throw err;
+
     query = words.slice();
     var queryVector = nj.array(util.vectorize(query, database.vectorIndex));
 
+    var ranks = [];
+    var results = [];
+
     Object.keys(database).forEach(function (id) {
       if (id != "vectorIndex" && id != "links") {
-        console.log(cosineSimilarity(queryVector, nj.array(database[id].data)));
+        ranks.push(cosineSimilarity(queryVector, nj.array(database[id].data)));
+        results.push({"title": database[id].title, "url": database[id].url});
       }
     });
+
+    console.log(util.sortFromArray(ranks, results));
+
   });
 }
 
 // If search query contains terms that is not in vectorIndex, cosineSimilarity will return NaN (e.g. "hello world")
-search("gautam mittal");
+search("problems involving numbers by gautam mittal");
