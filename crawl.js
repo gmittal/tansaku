@@ -6,8 +6,10 @@
 
 const cheerio = require('cheerio');
 const fs = require('graceful-fs');
+const lemmer = require('lemmer');
 const read = require('node-readability');
 const sw = require('stopword');
+const util = require(__dirname+'/util/util');
 const uuid = require('node-uuid');
 
 const seed = "http://gautam.cc/magical-mathematics-part-i";
@@ -38,28 +40,6 @@ Array.prototype.unique = function() {
     }, []);
 }
 
-/* Handles wacky relative URLs */
-function rel_to_abs(base, url){
-  if(/^(https?|file|ftps?|mailto|javascript|data:image\/[^;]{2,9};):/i.test(url))
-         return url;
-    var base_url = base.match(/^(.+)\/?(?:#.+)?$/)[0]+"/";
-    if(url.substring(0,2) == "//")
-        return base.split("/")[0] + url;
-    else if(url.charAt(0) == "/")
-        return base.split("/")[0] + "//" + base.split("/")[2] + url;
-    else if(url.substring(0,2) == "./")
-        url = "." + url;
-    else if(/^\s*$/.test(url))
-        return "";
-    else url = "../" + url;
-    url = base_url + url;
-    var i=0
-    while(/\/\.\.\//.test(url = url.replace(/[^\/]+\/+\.\.\//g,"")));
-    url = url.replace(/\.$/,"").replace(/\/\./g,"").replace(/"/g,"%22")
-            .replace(/'/g,"%27").replace(/</g,"%3C").replace(/>/g,"%3E");
-    return url;
-}
-
 function crawl() {
     const url = links[0];
     read(url, function(err, article, meta) {
@@ -85,40 +65,48 @@ function crawl() {
         return element !== "";
       });
 
-      // All unique words without stopwords
-      var vocab = sw.removeStopwords(chunked.unique());
+      chunked = sw.removeStopwords(chunked);
+      lemmer.lemmatize(chunked, function (e, words) {
+        if (e) throw e;
+        chunked = words.slice();
 
-      for (var j = 0; j < vocab.length; j++) {
-        if (vectorIndex.indexOf(vocab[j])) {
-          vectorIndex.push(vocab[j]);
-        }
-      }
+        // All unique words without stopwords
+        var vocab = sw.removeStopwords(chunked.unique());
 
-      storage.vectorIndex = vectorIndex.slice();
-      storage[uuid.v1()] = {
-        'title': article.title,
-        'url': url,
-        'data': sw.removeStopwords(chunked)
-      };
-
-      // fs.writeFile(__dirname+"/index.json", JSON.stringify(storage));
-
-      // Finds all URLs the current page links to
-      for (var i = 0; i < $("a")["length"]; i++) {
-          const urls = rel_to_abs(url, $("a")[i.toString()].attribs.href);
-          if (seen.indexOf(urls) == -1) {
-              links.push(urls);
-              seen.push(urls);
+        for (var j = 0; j < vocab.length; j++) {
+          if (vectorIndex.indexOf(vocab[j])) {
+            vectorIndex.push(vocab[j]);
           }
-      }
+        }
 
-      links.shift();
-      links = links.unique();
-      if (links.length != 0) {
-        article.close();
-        crawl();
-      }
+        storage.vectorIndex = vectorIndex.slice();
+        storage[uuid.v1()] = {
+          'title': article.title,
+          'url': url,
+          'data': sw.removeStopwords(chunked)
+        };
 
+        // fs.writeFile(__dirname+"/index.json", JSON.stringify(storage));
+
+        // Finds all URLs the current page links to
+        for (var i = 0; i < $("a")["length"]; i++) {
+            console.log(typeof url)
+            const urls = util.rel_to_abs(url, $("a")[i.toString()].attribs.href);
+            if (seen.indexOf(urls) == -1) {
+                links.push(urls);
+                seen.push(urls);
+            }
+        }
+
+        links.shift();
+        links = links.unique();
+        if (links.length != 0) {
+          article.close();
+          crawl();
+        }
+
+
+      });
 
     });
 }

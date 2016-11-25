@@ -13,7 +13,7 @@ function format() {
     Object.keys(d).forEach(function (id) {
       if (id != "vectorIndex" && id != "links") {
         console.log(d[id].url);
-        d[id].data = util.vectorize(d[id].data);
+        d[id].data = util.vectorize(d[id].data, d.vectorIndex);
       }
 
     });

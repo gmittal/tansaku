@@ -27,10 +27,31 @@ module.exports = {
 
     var vector = [];
     for (var j = 0; j < vectorIndex.length; j++) {
-      typeof indexJSON[vectorIndex[j]] != "undefined" ? vector.push(indexJSON[vectorIndex[j]]) :
-      vector.push(0);
+      typeof indexJSON[vectorIndex[j]] != "undefined" ?
+        vector.push(indexJSON[vectorIndex[j]]) :
+        vector.push(0);
     }
 
     return vector;
+  },
+  rel_to_abs: function(base, url) {
+    if(/^(https?|file|ftps?|mailto|javascript|data:image\/[^;]{2,9};):/i.test(url))
+           return url;
+      var base_url = base.match(/^(.+)\/?(?:#.+)?$/)[0]+"/";
+      if(url.substring(0,2) == "//")
+          return base.split("/")[0] + url;
+      else if(url.charAt(0) == "/")
+          return base.split("/")[0] + "//" + base.split("/")[2] + url;
+      else if(url.substring(0,2) == "./")
+          url = "." + url;
+      else if(/^\s*$/.test(url))
+          return "";
+      else url = "../" + url;
+      url = base_url + url;
+      var i=0
+      while(/\/\.\.\//.test(url = url.replace(/[^\/]+\/+\.\.\//g,"")));
+      url = url.replace(/\.$/,"").replace(/\/\./g,"").replace(/"/g,"%22")
+              .replace(/'/g,"%27").replace(/</g,"%3C").replace(/>/g,"%3E");
+      return url;
   }
 }
