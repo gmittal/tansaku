@@ -6,9 +6,8 @@
 
 const cheerio = require('cheerio');
 const fs = require('graceful-fs');
-const lemmer = require('lemmer');
+const natural = require('natural');
 const read = require('node-readability');
-const sw = require('stopword');
 const util = require(__dirname+'/util/util');
 const uuid = require('node-uuid');
 
@@ -19,6 +18,8 @@ var links = [];
 var seen = [];
 var vectorIndex = [];
 var storage = {};
+var tokenizer = new natural.WordTokenizer();
+natural.PorterStemmer.attach();
 
 // Update storage if crawling has happened in the past.
 try {
@@ -56,57 +57,41 @@ function crawl() {
 
       console.log("["+(links.length).toString() +"] [v: "+ (vectorIndex.length).toString() +"] " + url);
 
-      // All words
-      var chunked = (article.title + ' ' + article.textBody)
-      .toLowerCase()
-      .replace(/\W/g, ' ')
-      .split(" ")
-      .filter(function(element) {
-        return element !== "";
-      });
+      // All (lemmatized) words
+      var chunked = (article.title + ' ' + article.textBody).toLowerCase().tokenizeAndStem();
 
-      chunked = sw.removeStopwords(chunked);
-      lemmer.lemmatize(chunked, function (e, words) {
-        if (e) throw e;
-        chunked = words.slice();
+      // All unique words without stopwords
+      var vocab = chunked.unique();
 
-        // All unique words without stopwords
-        var vocab = sw.removeStopwords(chunked.unique());
+      for (var j = 0; j < vocab.length; j++) {
+        if (vectorIndex.indexOf(vocab[j])) {
+          vectorIndex.push(vocab[j]);
+        }
+      }
 
-        for (var j = 0; j < vocab.length; j++) {
-          if (vectorIndex.indexOf(vocab[j])) {
-            vectorIndex.push(vocab[j]);
+      storage.vectorIndex = vectorIndex.slice();
+      storage[uuid.v1()] = {
+        'title': article.title,
+        'url': url,
+        'data': chunked
+      };
+
+      // Finds all URLs the current page links to
+      for (var i = 0; i < $("a")["length"]; i++) {
+          const urls = util.rel_to_abs(url, $("a")[i.toString()].attribs.href);
+          if (seen.indexOf(urls) == -1) {
+              links.push(urls);
+              seen.push(urls);
           }
-        }
+      }
 
-        storage.vectorIndex = vectorIndex.slice();
-        storage[uuid.v1()] = {
-          'title': article.title,
-          'url': url,
-          'data': sw.removeStopwords(chunked)
-        };
+      links.shift();
+      links = links.unique();
+      if (links.length != 0) {
+        article.close();
+        crawl();
+      }
 
-        // fs.writeFile(__dirname+"/index.json", JSON.stringify(storage));
-
-        // Finds all URLs the current page links to
-        for (var i = 0; i < $("a")["length"]; i++) {
-            console.log(typeof url)
-            const urls = util.rel_to_abs(url, $("a")[i.toString()].attribs.href);
-            if (seen.indexOf(urls) == -1) {
-                links.push(urls);
-                seen.push(urls);
-            }
-        }
-
-        links.shift();
-        links = links.unique();
-        if (links.length != 0) {
-          article.close();
-          crawl();
-        }
-
-
-      });
 
     });
 }
