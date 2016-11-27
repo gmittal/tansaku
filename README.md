@@ -1,2 +1,2 @@
-# tansaku
-Proving a point about building search engines.
+# Tansaku
+Building a search engine from scratch using JavaScript and some math.
