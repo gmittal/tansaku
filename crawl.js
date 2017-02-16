@@ -4,6 +4,8 @@
     * 2016 Gautam Mittal
 */
 
+process.setMaxListeners(0); /* temporary until bug is resolved */
+
 const cheerio = require('cheerio');
 const fs = require('graceful-fs');
 const loki = require('lokijs');
@@ -33,10 +35,6 @@ db.loadDatabase({}, function() {
 });
 
 
-// var tokenizer = new natural.WordTokenizer();
-// natural.PorterStemmer.attach();
-
-
 Array.prototype.unique = function() {
     return this.reduce(function(accum, current) {
         if (accum.indexOf(current) < 0) {
@@ -45,8 +43,6 @@ Array.prototype.unique = function() {
         return accum;
     }, []);
 }
-
-
 
 
 function crawl() {
