@@ -6,30 +6,36 @@
 
 const cheerio = require('cheerio');
 const fs = require('graceful-fs');
+const loki = require('lokijs');
 const natural = require('natural');
 const read = require('node-readability');
 const util = require(__dirname+'/util/util');
 const uuid = require('node-uuid');
 
-const seed = "https://www.nytimes.com";
-const MAX_LINKS = 100;
 var count = 0;
-var seen = [];
-var vectorIndex = [];
+var vectorIndex = {};
 var storage = {};
-var tokenizer = new natural.WordTokenizer();
-natural.PorterStemmer.attach();
+var links = {};
 
-// Update storage if crawling has happened in the past.
-try {
-  fs.accessSync(__dirname+'/index.json');
-  storage = JSON.parse(fs.readFileSync(__dirname+'/index.json', 'utf-8'));
-  links = storage.links.slice();
-  vectorIndex = storage.vectorIndex.slice();
-} catch (e) {
-  fs.writeFileSync(__dirname+'/index.json', '{}', 'utf-8');
-  links = [seed];
-}
+var db = new loki(__dirname+'/data/index.json');
+db.loadDatabase({}, function() {
+  vectorIndex = db.getCollection('vocab') == null ? db.addCollection('vocab') : db.getCollection('vocab');
+  storage = db.getCollection('index') == null ? db.addCollection('index') : db.getCollection('index');
+  links = db.getCollection('links') == null ? db.addCollection('links') : db.getCollection('links');
+  if (links.data.length == 0) {
+    links.insert({l: "http://www.gautam.cc"});
+    links.insert({l: "https://www.nytimes.com/"});
+    links.insert({l: "https://www.nytimes.com/2017/02/16/opinion/the-man-who-let-india-out-of-the-closet.html"});
+    links.insert({l: "https://news.ycombinator.com/"});
+  }
+
+  crawl();
+});
+
+
+// var tokenizer = new natural.WordTokenizer();
+// natural.PorterStemmer.attach();
+
 
 Array.prototype.unique = function() {
     return this.reduce(function(accum, current) {
@@ -40,53 +46,61 @@ Array.prototype.unique = function() {
     }, []);
 }
 
+
+
+
 function crawl() {
-    const url = links[0];
+    const url = links.data[0].l;
+
     read(url, function(err, article, meta) {
       if (typeof article == "undefined") {
-        links.shift();
-        if (links.length != 0) {
+        links.remove(links.get(links.data[0]['$loki']));
+
+        if (links.data.length != 0) {
           crawl();
-          return;
         }
+
+        return;
       }
 
       count++;
       const $ = cheerio.load(article.html);
 
-      console.log("["+(links.length).toString() +"] [v: "+ (vectorIndex.length).toString() +"] " + url);
+      console.log("["+(links.data.length).toString() +"] [v: "+ vectorIndex.data.length +"] " + url);
 
-      // All (lemmatized) words
-      var chunked = (article.title + ' ' + article.textBody).toLowerCase().tokenizeAndStem();
+      var chunked = util.tokenize(article.title + ' ' + article.textBody);
 
-      // All unique words without stopwords
+      // All unique words
       var vocab = chunked.unique();
+      // console.log(vocab);
 
       for (var j = 0; j < vocab.length; j++) {
-        if (vectorIndex.indexOf(vocab[j])) {
-          vectorIndex.push(vocab[j]);
+        if (vectorIndex.find({w: { '$eq' : vocab[j] }}).length == 0) {
+          vectorIndex.insert({w: vocab[j]});
         }
       }
 
-      storage.vectorIndex = vectorIndex.slice();
-      storage[uuid.v1()] = {
+      var v = [];
+      for (var k = 0; k < vectorIndex.data.length; k++) {
+          v.push(vectorIndex.data[k].w);
+      }
+
+      storage.insert({
         'title': article.title,
         'url': url,
-        'data': chunked
-      };
+        'data': util.vectorize(chunked, v)
+      });
+
 
       // Finds all URLs the current page links to
       for (var i = 0; i < $("a")["length"]; i++) {
           const urls = util.rel_to_abs(url, $("a")[i.toString()].attribs.href);
-          if (seen.indexOf(urls) == -1) {
-              links.push(urls);
-              seen.push(urls);
-          }
+          links.insert({l: urls});
       }
 
-      links.shift();
-      links = links.unique();
-      if (links.length != 0) {
+      links.remove(links.get(links.data[0]['$loki']));
+
+      if (links.data.length != 0) {
         article.close();
         crawl();
       }
@@ -96,13 +110,9 @@ function crawl() {
 
 process.on('SIGINT', function() {
     console.log("Saving.");
-    var d = storage;
-    d.links = links.slice();
-    fs.writeFile(__dirname+'/index.json', JSON.stringify(storage), function (e) {
+
+    db.saveDatabase(function() {
       console.log("Done.");
       process.exit();
     });
 });
-
-
-crawl();

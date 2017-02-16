@@ -72,5 +72,13 @@ module.exports = {
     }
 
     return [A, B];
+  },
+  tokenize: function (blob) {
+    return blob
+      .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"")
+      .replace(/\s{2,}/g," ")
+      .replace(/(\r\n|\n|\r)/gm,"")
+      .toLowerCase()
+      .split(" ");
   }
 }
