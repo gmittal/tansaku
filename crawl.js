@@ -11,10 +11,9 @@ const read = require('node-readability');
 const util = require(__dirname+'/util/util');
 const uuid = require('node-uuid');
 
-const seed = "http://gautam.cc/magical-mathematics-part-i";
+const seed = "https://www.nytimes.com";
 const MAX_LINKS = 100;
 var count = 0;
-var links = [];
 var seen = [];
 var vectorIndex = [];
 var storage = {};
@@ -92,16 +91,13 @@ function crawl() {
         crawl();
       }
 
-
     });
 }
 
 process.on('SIGINT', function() {
     console.log("Saving.");
-
     var d = storage;
     d.links = links.slice();
-
     fs.writeFile(__dirname+'/index.json', JSON.stringify(storage), function (e) {
       console.log("Done.");
       process.exit();

@@ -18,16 +18,24 @@ const database = JSON.parse(fs.readFileSync(__dirname+'/formatted.json', 'utf-8'
 function vectorMagnitude(v) {
   v = nj.multiply(v, v);
   var magnitude = 0;
-  for (var i = 0; i < v.shape[0]; i++) {
-    magnitude += v.get(i);
-  }
-
-  var r = Math.sqrt(magnitude);
-  return r;
+  for (var i = 0; i < v.shape[0]; i++) { magnitude += v.get(i); }
+  return Math.sqrt(magnitude);
 }
 
 function cosineSimilarity(v1, v2) {
   return nj.dot(v1, v2).get(0) / (vectorMagnitude(v1) * vectorMagnitude(v2));
+}
+
+function n_containing(word, lyst){
+    var count = 0;
+    for (doc in lyst) {
+      count += lyst
+    }
+    return sum(1 for blob in bloblist if word in blob.words);
+}
+
+function tf_idf(item, docs) {
+  return (blob.words.count(word) / len(blob.words)) * (Math.log(len(bloblist) / (1 + n_containing(word, bloblist))));
 }
 
 function search(query) {
@@ -60,4 +68,4 @@ function search(query) {
 }
 
 // If search query contains terms that is not in vectorIndex, cosineSimilarity will return NaN (e.g. "hello world")
-search("");
+search(process.argv[2]);

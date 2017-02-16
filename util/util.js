@@ -21,9 +21,8 @@ function index(array) {
 module.exports = {
   vectorize: function (q, vectorIndex) {
     var indexJSON = {};
-    for (var i = 0; i < index(q)[0].length; i++) {
+    for (var i = 0; i < index(q)[0].length; i++)
       indexJSON[index(q)[0][i]] = index(q)[1][i];
-    }
 
     var vector = [];
     for (var j = 0; j < vectorIndex.length; j++) {
