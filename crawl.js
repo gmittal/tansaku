@@ -25,9 +25,7 @@ db.loadDatabase({}, function() {
   storage = db.getCollection('index') == null ? db.addCollection('index') : db.getCollection('index');
   links = db.getCollection('links') == null ? db.addCollection('links') : db.getCollection('links');
   if (links.data.length == 0) {
-    links.insert({l: "http://www.gautam.cc"});
-    links.insert({l: "https://www.nytimes.com/"});
-    links.insert({l: "https://www.nytimes.com/2017/02/16/opinion/the-man-who-let-india-out-of-the-closet.html"});
+    links.insert({l: "http://gautam.cc"});
     links.insert({l: "https://news.ycombinator.com/"});
   }
 
