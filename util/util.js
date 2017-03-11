@@ -1,6 +1,6 @@
 /*
    * Utilities for better abstraction
-   * 2016 Gautam Mittal
+   * 2017 Gautam Mittal
 */
 
 function index(array) {

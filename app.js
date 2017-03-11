@@ -1,7 +1,7 @@
 /*
    * Tansaku
    * A search engine of sorts (written more as a proof of concept)
-   * 2016 Gautam Mittal
+   * 2017 Gautam Mittal
 */
 
 const fs = require('graceful-fs');

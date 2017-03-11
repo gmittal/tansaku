@@ -1,10 +1,8 @@
 /*
     * Tansaku Crawl
-    * A very simple webcrawler that traverses the web given a seed URL
-    * 2016 Gautam Mittal
+    * A very simple webcrawler that traverses the web
+    * 2017 Gautam Mittal
 */
-
-process.setMaxListeners(0); /* temporary until bug is resolved */
 
 const cheerio = require('cheerio');
 const fs = require('graceful-fs');
