@@ -9,7 +9,6 @@ process.setMaxListeners(0); /* temporary until bug is resolved */
 const cheerio = require('cheerio');
 const fs = require('graceful-fs');
 const loki = require('lokijs');
-const natural = require('natural');
 const read = require('node-readability');
 const util = require(__dirname+'/util/util');
 const uuid = require('node-uuid');

@@ -5,7 +5,6 @@
 */
 
 const fs = require('graceful-fs');
-const natural = require('natural');
 const loki = require('lokijs');
 const nj = require(__dirname+'/util/numjs.min');
 const util = require(__dirname+'/util/util');
